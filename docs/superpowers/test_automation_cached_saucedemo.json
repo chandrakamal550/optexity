@@ -1,0 +1,113 @@
+{
+  "url": "https://www.saucedemo.com/",
+  "parameters": {
+    "input_parameters": {},
+    "generated_parameters": {}
+  },
+  "nodes": [
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='username']\")",
+          "prompt_instructions": "input the <input> labelled 'Username', at xpath html/body/div/div/div[2]/div[1]/div/div/form/div[1]/input, receiving 'standard_user'",
+          "input_text": "standard_user"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='password']\")",
+          "prompt_instructions": "input the <input> labelled 'Password', at xpath html/body/div/div/div[2]/div[1]/div/div/form/div[2]/input, receiving 'secret_sauce'",
+          "input_text": "secret_sauce"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"input[data-test='login-button']\")",
+          "prompt_instructions": "click the <input> labelled 'Login', at xpath html/body/div/div/div[2]/div[1]/div/div/form/input"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"button[data-test='add-to-cart-sauce-labs-backpack']\")",
+          "prompt_instructions": "click the <button> labelled 'Add to cart', at xpath html/body/div[1]/div/div/div/div/div/div/div[1]/div[2]/div[2]/button"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"a[data-test='shopping-cart-link']\")",
+          "prompt_instructions": "click the <a> labelled 'Cart, 1 items', at xpath html/body/div[1]/div/div/header/div[1]/div[3]/a"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"button[data-test='checkout']\")",
+          "prompt_instructions": "click the <button> labelled 'Checkout', #2 among its same-tag siblings, at xpath html/body/div[1]/div/div/div/div/div[2]/button[2]"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='firstName']\")",
+          "prompt_instructions": "input the <input> labelled 'First Name', at xpath html/body/div[1]/div/div/div/div/form/div[1]/div[1]/input, receiving 'John'",
+          "input_text": "John"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='lastName']\")",
+          "prompt_instructions": "input the <input> labelled 'Last Name', at xpath html/body/div[1]/div/div/div/div/form/div[1]/div[2]/input, receiving 'Doe'",
+          "input_text": "Doe"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='postalCode']\")",
+          "prompt_instructions": "input the <input> labelled 'Zip/Postal Code', at xpath html/body/div[1]/div/div/div/div/form/div[1]/div[3]/input, receiving '12345'",
+          "input_text": "12345"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"input[data-test='continue']\")",
+          "prompt_instructions": "click the <input> labelled 'Continue', at xpath html/body/div[1]/div/div/div/div/form/div[2]/input"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"button[data-test='finish']\")",
+          "prompt_instructions": "click the <button> labelled 'Finish', #2 among its same-tag siblings, at xpath html/body/div[1]/div/div/div/div/div[2]/div[9]/button[2]"
+        }
+      }
+    }
+  ]
+}

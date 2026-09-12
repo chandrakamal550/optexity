@@ -67,3 +67,8 @@ line_length = 88
 
 [tool.uv]
 exclude-newer = "7 days"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"

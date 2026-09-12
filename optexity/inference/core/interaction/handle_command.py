@@ -18,6 +18,7 @@ from optexity.inference.core.interaction.utils import (
     highlight_element_and_screenshot,
 )
 from optexity.inference.infra.browser import Browser
+from optexity.replay_cache.gate import resolve_unique
 from optexity.schema.actions.interaction_action import (
     CheckAction,
     ClickElementAction,
@@ -75,9 +76,43 @@ async def command_based_action_with_retry(
     max_tries: int,
     max_timeout_seconds_per_try: float,
 ) -> str | None:
+    """Run the retry loop, and record the replay gate's verdict exactly once.
 
+    Once *per action*, not once per try: an action that exhausts three tries is
+    one escalation, not three. Recording inside the loop turned these counters
+    — the instrument that makes "the cached run worked" falsifiable — into a
+    retry counter.
+    """
     if action.command is None or action.skip_command:
         return
+
+    # `outcome_box` carries the last gate outcome out of the loop, including
+    # when the loop exits by raising.
+    outcome_box: list = []
+    try:
+        return await _command_retry_loop(
+            action,
+            browser,
+            memory,
+            task,
+            max_tries,
+            max_timeout_seconds_per_try,
+            outcome_box,
+        )
+    finally:
+        if outcome_box:
+            memory.replay_cache.record(outcome_box[-1])
+
+
+async def _command_retry_loop(
+    action,
+    browser: Browser,
+    memory: Memory,
+    task: Task,
+    max_tries: int,
+    max_timeout_seconds_per_try: float,
+    outcome_box: list,
+) -> str | None:
 
     last_error = None
 
@@ -87,16 +122,50 @@ async def command_based_action_with_retry(
         last_error = None
         try:
             # https://playwright.dev/docs/actionability
-            locator = await browser.get_locator_from_command(action.command)
-            if locator is None:
-                continue
-            if try_index == 0:
+            #
+            # The wait comes BEFORE the replay gate, deliberately, and must stay
+            # there. Locator.count() does not auto-wait: an element that enters
+            # the DOM a few hundred milliseconds after the action starts (a
+            # post-click render, an SPA route change) makes the gate see 0
+            # matches at t=0. Gating first therefore declined instantly, and the
+            # `continue` below skipped both this wait_for and the retry backoff
+            # — every try burned with zero elapsed time, for every automation,
+            # cached or not. Resolve the primary command, wait on it exactly as
+            # the pre-gate code did, and only then check uniqueness.
+            primary_locator = await browser.get_locator_from_command(action.command)
+            if primary_locator is not None and try_index == 0:
                 try:
-                    await locator.wait_for(
+                    await primary_locator.wait_for(
                         state="visible", timeout=max_timeout_seconds_per_try * 1000
                     )
-                except Exception as e:
+                except Exception:
+                    # Timeout, strict-mode ambiguity, detached node: all of these
+                    # are the gate's business to classify, not this wait's.
                     pass
+
+            outcome = await resolve_unique(
+                browser, action.command, getattr(action, "locator_candidates", None) or []
+            )
+            outcome_box.append(outcome)
+            if not outcome.resolved:
+                logger.warning(
+                    f"Replay gate declined {action.__class__.__name__}: {outcome.reason}"
+                )
+                last_error = f"error: {outcome.reason}"
+                # Same backoff every other failure branch takes. Without it the
+                # retry chain costs nothing and therefore buys nothing.
+                await asyncio.sleep(max_timeout_seconds_per_try)
+                continue
+            if outcome.candidate_rank > 0:
+                logger.info(
+                    f"Replay gate recovered via candidate rank {outcome.candidate_rank}: "
+                    f"{outcome.command}"
+                )
+            locator = await browser.get_locator_from_command(outcome.command)
+            if locator is None:
+                last_error = "error: gate command did not resolve to a locator"
+                await asyncio.sleep(max_timeout_seconds_per_try)
+                continue
             is_visible = await locator.is_visible()
 
             if is_visible:
