@@ -573,6 +573,18 @@ async def task_processor():
                     )
                 continue
 
+            if pathlib.Path("test_automation.json").exists():
+                from optexity.schema.automation import Automation
+
+                logger.info(
+                    f"Overriding automation for task {task.task_id} from "
+                    f"local test_automation.json"
+                )
+                with open("test_automation.json", "r") as f:
+                    automation = json.load(f)
+                    automation = Automation.model_validate(automation)
+                task.automation = automation
+
             task_running = True
             last_task_start_time = datetime.now(timezone.utc)
             current_task_timeout_minutes = task.max_timeout_in_minutes
