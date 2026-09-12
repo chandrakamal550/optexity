@@ -9,6 +9,7 @@ from playwright.async_api import Download
 from pydantic import BaseModel, Field, model_validator
 
 from optexity.replay_cache.counters import ReplayCounters
+from optexity.replay_cache.metrics import RunMetrics
 from optexity.schema.token_usage import TokenUsage
 
 
@@ -155,6 +156,9 @@ class Memory(BaseModel):
     browser_states: list[BrowserState] = Field(default_factory=list)
     token_usage: TokenUsage = Field(default_factory=TokenUsage)
     replay_cache: ReplayCounters = Field(default_factory=ReplayCounters)
+    # One entry per handle_agentic_task() call (one per agentic step). Empty
+    # whenever the automation never fell back to the LLM at all.
+    agentic_run_metrics: list[RunMetrics] = Field(default_factory=list)
     download_lock: asyncio.Lock = Field(default_factory=asyncio.Lock)
     raw_downloads: dict[Path, tuple[bool, Download | None]] = Field(
         default_factory=dict

@@ -1,0 +1,117 @@
+{
+  "url": "https://www.saucedemo.com/",
+  "parameters": {
+    "input_parameters": {
+      "stock_ticker": [
+        "NVDA"
+      ]
+    },
+    "generated_parameters": {}
+  },
+  "nodes": [
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='username']\")",
+          "prompt_instructions": "input the element previously identified as Username",
+          "input_text": "standard_user"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='password']\")",
+          "prompt_instructions": "input the element previously identified as Password",
+          "input_text": "secret_sauce"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"input[data-test='login-button']\")",
+          "prompt_instructions": "click the element previously identified as Login"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"button[data-test='add-to-cart-sauce-labs-backpack']\")",
+          "prompt_instructions": "click the element previously identified as Add to cart"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"a[data-test='shopping-cart-link']\")",
+          "prompt_instructions": "click the element previously identified as Cart, 1 items"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"button[data-test='checkout']\")",
+          "prompt_instructions": "click the element previously identified as Checkout"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='firstName']\")",
+          "prompt_instructions": "input the element previously identified as First Name",
+          "input_text": "John"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='lastName']\")",
+          "prompt_instructions": "input the element previously identified as Last Name",
+          "input_text": "Doe"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "input_text": {
+          "command": "locator(\"input[data-test='postalCode']\")",
+          "prompt_instructions": "input the element previously identified as Zip/Postal Code",
+          "input_text": "12345"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"input[data-test='continue']\")",
+          "prompt_instructions": "click the element previously identified as Continue"
+        }
+      }
+    },
+    {
+      "type": "action_node",
+      "interaction_action": {
+        "click_element": {
+          "command": "locator(\"button[data-test='finish']\")",
+          "prompt_instructions": "click the element previously identified as Finish"
+        }
+      }
+    }
+  ]
+}

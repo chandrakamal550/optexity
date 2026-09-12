@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from pathlib import Path
 
 from browser_use import Agent, BrowserSession, Tools
@@ -7,6 +8,7 @@ from browser_use import Agent, BrowserSession, Tools
 from optexity.inference.infra.browser import Browser
 from optexity.inference.models import normalize_model
 from optexity.inference.models.chat_litellm import build_agent_llm
+from optexity.replay_cache.metrics import from_history
 from optexity.schema.actions.interaction_action import (
     AgenticTask,
     CloseOverlayPopupAction,
@@ -87,8 +89,20 @@ async def handle_agentic_task(
             logger.debug(f"Starting browser session for agentic task {browser.cdp_url} ")
             await agent.browser_session.start()
             logger.debug(f"Finally running agentic task on browser_use {browser.cdp_url} ")
+            run_started_at = time.monotonic()
             history = await agent.run(max_steps=agentic_task_action.max_steps)
+            wall_clock_s = time.monotonic() - run_started_at
             logger.debug(f"Agentic task completed on browser_use {browser.cdp_url} ")
+
+            run_metrics = from_history(history, wall_clock_s)
+            memory.agentic_run_metrics.append(run_metrics)
+            logger.info(
+                f"Agentic run metrics: wall_clock={run_metrics.wall_clock_s:.2f}s "
+                f"llm_calls={run_metrics.llm_calls} "
+                f"prompt_tokens={run_metrics.prompt_tokens} "
+                f"completion_tokens={run_metrics.completion_tokens} "
+                f"steps={run_metrics.steps}"
+            )
 
             agent.stop()
             if agent.browser_session:
