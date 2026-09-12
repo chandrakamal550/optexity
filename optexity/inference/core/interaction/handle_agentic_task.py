@@ -94,15 +94,25 @@ async def handle_agentic_task(
             wall_clock_s = time.monotonic() - run_started_at
             logger.debug(f"Agentic task completed on browser_use {browser.cdp_url} ")
 
-            run_metrics = from_history(history, wall_clock_s)
-            memory.agentic_run_metrics.append(run_metrics)
-            logger.info(
-                f"Agentic run metrics: wall_clock={run_metrics.wall_clock_s:.2f}s "
-                f"llm_calls={run_metrics.llm_calls} "
-                f"prompt_tokens={run_metrics.prompt_tokens} "
-                f"completion_tokens={run_metrics.completion_tokens} "
-                f"steps={run_metrics.steps}"
-            )
+            # Diagnostics only: must never be able to skip the cleanup below.
+            # A pydantic error building RunMetrics or a formatting error in
+            # the log line would otherwise leave agent.stop() /
+            # browser_session.stop() / .reset() unreached for every agentic
+            # task in the codebase, not only replay-cache ones.
+            try:
+                run_metrics = from_history(history, wall_clock_s)
+                memory.agentic_run_metrics.append(run_metrics)
+                logger.info(
+                    f"Agentic run metrics: wall_clock={run_metrics.wall_clock_s:.2f}s "
+                    f"llm_calls={run_metrics.llm_calls} "
+                    f"prompt_tokens={run_metrics.prompt_tokens} "
+                    f"completion_tokens={run_metrics.completion_tokens} "
+                    f"steps={run_metrics.steps}"
+                )
+            except Exception as e:
+                logger.debug(
+                    f"Replay-cache run-metrics capture skipped: {type(e).__name__}: {e}"
+                )
 
             agent.stop()
             if agent.browser_session:
