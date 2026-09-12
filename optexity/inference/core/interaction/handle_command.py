@@ -18,6 +18,7 @@ from optexity.inference.core.interaction.utils import (
     highlight_element_and_screenshot,
 )
 from optexity.inference.infra.browser import Browser
+from optexity.replay_cache.gate import resolve_unique
 from optexity.schema.actions.interaction_action import (
     CheckAction,
     ClickElementAction,
@@ -87,7 +88,21 @@ async def command_based_action_with_retry(
         last_error = None
         try:
             # https://playwright.dev/docs/actionability
-            locator = await browser.get_locator_from_command(action.command)
+            outcome = await resolve_unique(
+                browser, action.command, getattr(action, "locator_candidates", None) or []
+            )
+            if not outcome.resolved:
+                logger.warning(
+                    f"Replay gate declined {action.__class__.__name__}: {outcome.reason}"
+                )
+                last_error = f"error: {outcome.reason}"
+                continue
+            if outcome.candidate_rank > 0:
+                logger.info(
+                    f"Replay gate recovered via candidate rank {outcome.candidate_rank}: "
+                    f"{outcome.command}"
+                )
+            locator = await browser.get_locator_from_command(outcome.command)
             if locator is None:
                 continue
             if try_index == 0:
