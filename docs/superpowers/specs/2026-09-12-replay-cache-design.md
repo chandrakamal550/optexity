@@ -191,7 +191,7 @@ is ultimately empirical.
    load-bearing.
 4. **Consecutive duplicates** on the same `(action_type, element_hash)`.
 
-**Never pruned:** `check` / `uncheck`, and any failed `input`. See §6.3.
+**Never pruned:** failed `input`, `select_dropdown`, `send_keys`, `upload_file`. See §6.3.
 
 ### 6.2 Why scroll is not dropped wholesale
 
@@ -215,15 +215,14 @@ a scroll that *caused* the next element to exist is load-bearing.
 
 ### 6.3 Why a failed action is not automatically dropped
 
-`ActionResult.error` is a terminal-outcome flag with no atomicity guarantee. Verified
-counter-examples:
+`ActionResult.error` is a terminal-outcome flag with no atomicity guarantee. Actions that
+mutate page state before they can fail (`input`, `select_dropdown`, `send_keys`, `upload_file`)
+are replayed rather than assumed to be no-ops. Verified examples:
 
-- `check_locator` (`handle_command.py:371`) calls `uncheck()`, sleeps, re-resolves, then
-  `check()`. If the second call throws, the checkbox is already toggled and only the second
-  failure surfaces.
 - browser-use's `input` clears the field before typing
   (`default_action_watchdog.py:236-270`); a mid-way failure leaves it blanked, then falls back
   to click-and-type.
+- `send_keys` may dispatch part of its keystroke sequence before a later character fails.
 - Multi-page `scroll` swallows per-page failures and returns **success** anyway
   (`tools/service.py:738-770`) — partial completion reported as full success.
 

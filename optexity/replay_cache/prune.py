@@ -20,9 +20,11 @@ BOOKKEEPING_ACTIONS = {
     "write_file", "replace_file", "read_file", "evaluate",
 }
 
-# Actions that change state before they can fail. A failed one may have left
-# the page altered, so it is replayed rather than assumed to be a no-op.
-NON_IDEMPOTENT_ACTIONS = {"check", "uncheck", "input", "select_dropdown"}
+# Actions that mutate page state before they can fail. A failed one may have left
+# the page altered, so it is replayed rather than assumed to be a no-op. `input` clears
+# the field before typing, so a mid-way failure leaves it blanked. `send_keys` may have
+# dispatched part of its keystroke sequence. `upload_file` can attach before failing.
+NON_IDEMPOTENT_ACTIONS = {"input", "select_dropdown", "send_keys", "upload_file"}
 
 # Navigation always matters: it decides which page later steps run against.
 NAVIGATION_ACTIONS = {"navigate", "search", "go_back", "switch", "close"}

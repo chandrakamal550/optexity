@@ -41,16 +41,22 @@ def test_load_bearing_scroll_is_kept():
     assert kept_types(steps) == ["scroll", "click"]
 
 
-def test_failed_check_is_never_pruned():
-    """check_locator calls uncheck() then check(); a failure may have toggled it."""
-    steps = [step(1, "check", index=3, el_hash=5, success=False, error="timeout")]
-    assert kept_types(steps) == ["check"]
+def test_failed_send_keys_is_never_pruned():
+    """send_keys may dispatch part of its keystroke sequence before failing."""
+    steps = [step(1, "send_keys", index=3, el_hash=5, success=False, error="timeout")]
+    assert kept_types(steps) == ["send_keys"]
 
 
 def test_failed_input_is_never_pruned():
     """browser-use clears the field before typing, so a failure leaves it blank."""
     steps = [step(1, "input", index=3, el_hash=5, success=False, error="boom")]
     assert kept_types(steps) == ["input"]
+
+
+def test_failed_select_dropdown_is_never_pruned():
+    """select_dropdown mutates the dropdown state before it can fail."""
+    steps = [step(1, "select_dropdown", index=3, el_hash=5, success=False, error="timeout")]
+    assert kept_types(steps) == ["select_dropdown"]
 
 
 def test_failed_click_is_dropped():
