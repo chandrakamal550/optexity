@@ -235,6 +235,13 @@ Emit the pruned candidate, run it once, accept only if it completes. On failure,
 most recently dropped class and retry. Under-pruning costs milliseconds; over-pruning breaks
 the automation. The assignment requires a verification run regardless, so this is free.
 
+> **Not implemented as described.** The verification replay is performed by hand, not by the
+> emitter, and there is no automatic widen-on-failure loop. Both end-to-end runs were verified
+> manually and both passed on the first pruned candidate, so the loop was never needed — but
+> nothing in the code would catch an over-prune automatically. Automating it is a follow-up,
+> and until then the pruner's rules carry the correctness burden alone rather than sharing it
+> with a replay check.
+
 ## 7. Replay safety
 
 ### 7.1 What already exists

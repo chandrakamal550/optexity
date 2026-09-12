@@ -2,8 +2,15 @@
 
 Conservative by construction: pruning a needed step breaks replay silently,
 while keeping a redundant one costs milliseconds. The rules below generate a
-candidate sequence; the verification replay in the emitter decides whether it
-was right.
+candidate sequence, and whether that sequence was right is decided by running
+the emitted automation, not by this module's confidence in its own heuristics.
+
+That verification is currently manual: the emitter does NOT replay what it
+produces, and there is no automatic widen-on-failure loop. Design §6.4
+describes one — emit, run, restore the most recently dropped class on failure,
+retry — and it is not implemented here. Anyone relying on "the pruner is
+self-checking" would be wrong; a bad prune surfaces when a human runs the
+cached automation and sees it fail.
 """
 
 from pydantic import BaseModel
