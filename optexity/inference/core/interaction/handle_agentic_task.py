@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 
 from browser_use import Agent, BrowserSession, Tools
 
@@ -13,6 +15,17 @@ from optexity.schema.memory import Memory
 from optexity.schema.task import Task
 
 logger = logging.getLogger(__name__)
+
+REPLAY_CACHE_TRACE_ENV = "OPTEXITY_REPLAY_CACHE_TRACE"
+
+
+def trace_path_for(task: Task, memory: Memory) -> Path:
+    """Where this agentic step's raw trace is written."""
+    return (
+        task.logs_directory
+        / f"step_{memory.automation_state.step_index}"
+        / "replay_cache_trace.jsonl"
+    )
 
 
 async def handle_agentic_task(
@@ -57,6 +70,10 @@ async def handle_agentic_task(
         )
         step_directory.mkdir(parents=True, exist_ok=True)
 
+        trace_path = trace_path_for(task, memory)
+        os.environ[REPLAY_CACHE_TRACE_ENV] = str(trace_path)
+        logger.debug(f"Replay-cache trace for this step: {trace_path}")
+
         agent = Agent(
             task=agentic_task_action.task,
             llm=llm,
@@ -76,6 +93,13 @@ async def handle_agentic_task(
         if agent.browser_session:
             await agent.browser_session.stop()
             await agent.browser_session.reset()
+
+        os.environ.pop(REPLAY_CACHE_TRACE_ENV, None)
+        if trace_path.exists():
+            logger.info(
+                f"Replay-cache trace written: {trace_path} "
+                f"({sum(1 for _ in trace_path.open())} step records)"
+            )
 
         return history
 
