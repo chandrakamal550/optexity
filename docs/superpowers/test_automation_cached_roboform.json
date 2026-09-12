@@ -1,11 +1,7 @@
 {
   "url": "https://www.roboform.com/filling-test-all-fields",
   "parameters": {
-    "input_parameters": {
-      "stock_ticker": [
-        "NVDA"
-      ]
-    },
+    "input_parameters": {},
     "generated_parameters": {}
   },
   "nodes": [
@@ -14,7 +10,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[5]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '04fullname', at xpath html/body/div[2]/form/div/div[1]/div[5]/div[2]/input, receiving 'myname'",
           "input_text": "myname"
         }
       }
@@ -24,7 +20,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[8]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '10address1', at xpath html/body/div[2]/form/div/div[1]/div[8]/div[2]/input, receiving 'xyz'",
           "input_text": "xyz"
         }
       }
@@ -34,7 +30,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[9]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '11address2', at xpath html/body/div[2]/form/div/div[1]/div[9]/div[2]/input, receiving 'abc'",
           "input_text": "abc"
         }
       }
@@ -44,7 +40,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[10]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '13adr_city', at xpath html/body/div[2]/form/div/div[1]/div[10]/div[2]/input, receiving 'SF'",
           "input_text": "SF"
         }
       }
@@ -54,7 +50,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[5]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '04fullname', at xpath html/body/div[2]/form/div/div[1]/div[5]/div[2]/input, receiving 'myname'",
           "input_text": "myname"
         }
       }
@@ -64,7 +60,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[8]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '10address1', at xpath html/body/div[2]/form/div/div[1]/div[8]/div[2]/input, receiving 'xyz'",
           "input_text": "xyz"
         }
       }
@@ -74,7 +70,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[9]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '11address2', at xpath html/body/div[2]/form/div/div[1]/div[9]/div[2]/input, receiving 'abc'",
           "input_text": "abc"
         }
       }
@@ -84,7 +80,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[10]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '13adr_city', at xpath html/body/div[2]/form/div/div[1]/div[10]/div[2]/input, receiving 'SF'",
           "input_text": "SF"
         }
       }
@@ -94,7 +90,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[5]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '04fullname', at xpath html/body/div[2]/form/div/div[1]/div[5]/div[2]/input, receiving 'myname'",
           "input_text": "myname"
         }
       }
@@ -104,7 +100,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[8]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '10address1', at xpath html/body/div[2]/form/div/div[1]/div[8]/div[2]/input, receiving 'xyz'",
           "input_text": "xyz"
         }
       }
@@ -114,7 +110,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[9]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '11address2', at xpath html/body/div[2]/form/div/div[1]/div[9]/div[2]/input, receiving 'abc'",
           "input_text": "abc"
         }
       }
@@ -124,7 +120,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"xpath=html/body/div[2]/form/div/div[1]/div[10]/div[2]/input\")",
-          "prompt_instructions": "input the element previously identified as input",
+          "prompt_instructions": "input the <input> labelled '13adr_city', at xpath html/body/div[2]/form/div/div[1]/div[10]/div[2]/input, receiving 'SF'",
           "input_text": "SF"
         }
       }

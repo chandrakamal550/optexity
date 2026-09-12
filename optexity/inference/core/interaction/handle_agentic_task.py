@@ -20,6 +20,24 @@ logger = logging.getLogger(__name__)
 
 REPLAY_CACHE_TRACE_ENV = "OPTEXITY_REPLAY_CACHE_TRACE"
 
+# Off-switch for the recorder itself. Recording costs one hash of the whole
+# selector map per step plus a JSONL append, on every agentic task in the
+# codebase — including tasks that will never build a cache entry. On by
+# default (a trace is worthless if it has to be requested before the run that
+# needed it), but it must be possible to turn off without a deploy.
+REPLAY_CACHE_RECORD_ENV = "OPTEXITY_REPLAY_CACHE_RECORD"
+_FALSY = {"0", "false", "no", "off"}
+
+
+def recording_enabled() -> bool:
+    """True unless OPTEXITY_REPLAY_CACHE_RECORD is explicitly set to a falsy value."""
+    try:
+        return os.environ.get(REPLAY_CACHE_RECORD_ENV, "").strip().lower() not in _FALSY
+    except Exception:
+        # Matches the recorder's own posture: a failure to read configuration
+        # must never be able to break an agentic task.
+        return True
+
 
 def trace_path_for(task: Task, memory: Memory) -> Path:
     """Where this agentic step's raw trace is written."""
@@ -73,8 +91,17 @@ async def handle_agentic_task(
         step_directory.mkdir(parents=True, exist_ok=True)
 
         trace_path = trace_path_for(task, memory)
-        os.environ[REPLAY_CACHE_TRACE_ENV] = str(trace_path)
-        logger.debug(f"Replay-cache trace for this step: {trace_path}")
+        recording = recording_enabled()
+        if recording:
+            os.environ[REPLAY_CACHE_TRACE_ENV] = str(trace_path)
+            logger.debug(f"Replay-cache trace for this step: {trace_path}")
+        else:
+            # The recorder is inert unless the env var names a path, so
+            # clearing it is the whole off-switch.
+            os.environ.pop(REPLAY_CACHE_TRACE_ENV, None)
+            logger.debug(
+                f"Replay-cache recording disabled by {REPLAY_CACHE_RECORD_ENV}"
+            )
 
         try:
             agent = Agent(

@@ -13,6 +13,7 @@ cleanup for every agentic task in the codebase. Nothing failed if the
 existed to prevent, already paid for once with ReplayCounters (Task 7).
 """
 
+import os
 from types import SimpleNamespace
 
 import optexity.inference.core.interaction.handle_agentic_task as hat
@@ -57,6 +58,9 @@ class FakeAgent:
         FakeAgent.last_instance = self
 
     async def run(self, max_steps):
+        # What the recorder in the browser-use fork would see: it is inert
+        # unless this env var names a path.
+        self.trace_env_during_run = os.environ.get(hat.REPLAY_CACHE_TRACE_ENV)
         return FakeHistory()
 
     def stop(self):
@@ -133,3 +137,56 @@ async def test_raising_metrics_capture_does_not_prevent_cleanup(monkeypatch, tmp
     assert agent.stopped is True
     assert agent.browser_session.stopped is True
     assert agent.browser_session.reset_called is True
+
+
+async def test_recording_is_on_by_default(monkeypatch, tmp_path):
+    """A trace is worthless if it has to be requested before the run that
+    needed it, so the recorder defaults to on."""
+    _patch_agent_deps(monkeypatch)
+    monkeypatch.delenv(hat.REPLAY_CACHE_RECORD_ENV, raising=False)
+    monkeypatch.delenv(hat.REPLAY_CACHE_TRACE_ENV, raising=False)
+    memory = Memory(unique_child_arn="test")
+    memory.automation_state.step_index = 0
+
+    await hat.handle_agentic_task(
+        AgenticTask(task="do something", max_steps=5),
+        _make_task(tmp_path),
+        memory,
+        _make_browser(),
+    )
+
+    assert FakeAgent.last_instance.trace_env_during_run == str(
+        hat.trace_path_for(_make_task(tmp_path), memory)
+    )
+
+
+async def test_recording_can_be_switched_off_without_a_deploy(monkeypatch, tmp_path):
+    """Every agentic task in the codebase hashes the whole selector map once
+    per step and appends JSONL. Defensible as a default, but it must be
+    possible to turn off from configuration."""
+    _patch_agent_deps(monkeypatch)
+    monkeypatch.setenv(hat.REPLAY_CACHE_RECORD_ENV, "0")
+    monkeypatch.setenv(hat.REPLAY_CACHE_TRACE_ENV, "/should/be/cleared.jsonl")
+    memory = Memory(unique_child_arn="test")
+    memory.automation_state.step_index = 0
+
+    await hat.handle_agentic_task(
+        AgenticTask(task="do something", max_steps=5),
+        _make_task(tmp_path),
+        memory,
+        _make_browser(),
+    )
+
+    # Not merely "a different path": the recorder must see nothing at all.
+    assert FakeAgent.last_instance.trace_env_during_run is None
+
+
+def test_only_explicit_falsy_values_disable_recording(monkeypatch):
+    for value in ("0", "false", "FALSE", " no ", "off"):
+        monkeypatch.setenv(hat.REPLAY_CACHE_RECORD_ENV, value)
+        assert hat.recording_enabled() is False, value
+    for value in ("1", "true", "yes", "on", "", "anything-else"):
+        monkeypatch.setenv(hat.REPLAY_CACHE_RECORD_ENV, value)
+        assert hat.recording_enabled() is True, value
+    monkeypatch.delenv(hat.REPLAY_CACHE_RECORD_ENV, raising=False)
+    assert hat.recording_enabled() is True

@@ -194,3 +194,138 @@ def test_adversarial_page_text_stays_inert():
     unescaped_called = _called_names(f"page.{unescaped}")
     assert "__import__" in unescaped_called
     assert "system" in unescaped_called
+
+
+NAVIGATE_STEP = StepRecord(
+    step=5,
+    url="https://www.saucedemo.com/",
+    action=ActionRecord(
+        type="navigate", index=None, params={"url": "https://www.saucedemo.com/cart.html"}
+    ),
+)
+
+SEARCH_STEP = StepRecord(
+    step=6,
+    url="https://www.saucedemo.com/",
+    action=ActionRecord(type="search", index=None, params={"query": "sauce labs"}),
+)
+
+GO_BACK_STEP = StepRecord(
+    step=7, url="https://www.saucedemo.com/cart.html",
+    action=ActionRecord(type="go_back", index=None, params={}),
+)
+
+
+def test_navigate_step_emits_a_go_to_url_node():
+    """The pruner keeps navigation because it decides which page every later
+    step runs against. The emitter used to drop it, so any workflow that
+    navigated mid-run replayed its later steps against the wrong page."""
+    from optexity.schema.automation import Automation
+
+    entry = build_entry(
+        "k1", "ep1", SEARCH_INPUT.url, [SEARCH_INPUT, NAVIGATE_STEP, LINK_CLICK]
+    )
+    assert [s.action_type for s in entry.steps] == ["input", "navigate", "click"]
+    assert entry.steps[1].url == "https://www.saucedemo.com/cart.html"
+
+    doc = to_automation(entry, SEARCH_INPUT.url, {})
+    Automation.model_validate(doc)  # raises if the node shape is wrong
+    assert doc["nodes"][1]["interaction_action"]["go_to_url"] == {
+        "url": "https://www.saucedemo.com/cart.html"
+    }
+
+
+def test_excluded_navigation_kinds_are_reported_not_vanished():
+    """search/go_back/switch/close have no safe conversion, but a silent drop
+    means a mis-replayed automation with nothing to point at."""
+    entry = build_entry(
+        "k1", "ep1", SEARCH_INPUT.url, [SEARCH_INPUT, SEARCH_STEP, GO_BACK_STEP]
+    )
+    assert [s.action_type for s in entry.steps] == ["input"]
+    reported = {d.action_type: d for d in entry.skipped}
+    assert set(reported) == {"search", "go_back"}
+    for d in reported.values():
+        assert d.emitted is False
+        assert d.reason  # a stated reason, not an empty string
+
+
+def test_upload_file_exclusion_is_reported_too():
+    entry = build_entry(
+        "k1", "ep1", SEARCH_INPUT.url, [SEARCH_INPUT, UPLOAD_STEP, LINK_CLICK]
+    )
+    assert [d.action_type for d in entry.skipped] == ["upload_file"]
+
+
+def test_a_fully_emitted_trace_reports_nothing_skipped():
+    entry = build_entry("k1", "ep1", SEARCH_INPUT.url, [SEARCH_INPUT, LINK_CLICK])
+    assert entry.skipped == []
+
+
+UNLABELLED_A = StepRecord(
+    step=1,
+    url="https://www.roboform.com/filling-test-all-fields",
+    action=ActionRecord(type="input", index=6, params={"text": "myname"}),
+    element=ElementSignals(
+        tag_name="input",
+        attributes={},
+        xpath="html/body/div[2]/form/div/div[1]/div[5]/div[2]/input",
+        element_hash=201,
+    ),
+)
+
+UNLABELLED_B = StepRecord(
+    step=2,
+    url="https://www.roboform.com/filling-test-all-fields",
+    action=ActionRecord(type="input", index=7, params={"text": "xyz"}),
+    element=ElementSignals(
+        tag_name="input",
+        attributes={},
+        xpath="html/body/div[2]/form/div/div[1]/div[8]/div[2]/input",
+        element_hash=202,
+    ),
+)
+
+
+def test_same_tag_elements_get_distinguishable_prompt_instructions():
+    """When the gate declines and skip_prompt is False, prompt_instructions is
+    all the LLM index predictor gets. On roboform the old fallback produced
+    'input the element previously identified as input' for all twelve fields."""
+    entry = build_entry("k1", "ep1", UNLABELLED_A.url, [UNLABELLED_A, UNLABELLED_B])
+    a, b = (s.prompt_instructions for s in entry.steps)
+    assert a != b
+    # And the distinguishing detail is present, not just incidental noise.
+    assert UNLABELLED_A.element.xpath in a
+    assert UNLABELLED_B.element.xpath in b
+    assert "myname" in a and "xyz" in b
+
+
+def test_prompt_instructions_still_use_a_real_label_when_there_is_one():
+    entry = build_entry("k1", "ep1", SEARCH_INPUT.url, [SEARCH_INPUT])
+    assert "firstname" in entry.steps[0].prompt_instructions
+
+
+def test_input_parameters_the_automation_never_reads_are_not_emitted():
+    """Both committed artifacts carried {"stock_ticker": ["NVDA"]} on pages
+    that never reference it: emitted values are literal, so nothing binds."""
+    entry = build_entry("k1", "ep1", SEARCH_INPUT.url, [SEARCH_INPUT, LINK_CLICK])
+    doc = to_automation(entry, SEARCH_INPUT.url, {"stock_ticker": ["NVDA"]})
+    assert doc["parameters"]["input_parameters"] == {}
+
+
+def test_input_parameters_actually_referenced_are_kept():
+    from optexity.replay_cache.store import CachedStep, CacheEntry
+
+    entry = CacheEntry(
+        key="k1", endpoint_name="ep1", origin="https://example.com",
+        created_at="2026-09-12T00:00:00+00:00",
+        steps=[
+            CachedStep(
+                action_type="input",
+                command='locator("#ticker")',
+                input_text="{stock_ticker[0]}",
+                prompt_instructions="input the <input>",
+            )
+        ],
+    )
+    doc = to_automation(entry, "https://example.com", {"stock_ticker": ["NVDA"], "unused": ["x"]})
+    assert doc["parameters"]["input_parameters"] == {"stock_ticker": ["NVDA"]}

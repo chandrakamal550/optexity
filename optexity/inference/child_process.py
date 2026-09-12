@@ -42,6 +42,26 @@ from optexity.utils.settings import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Manual-testing escape hatch: replace the fetched automation with a local file.
+# Two independent conditions must hold — the env var must be explicitly set to a
+# truthy value AND the file must exist. Either alone does nothing.
+LOCAL_AUTOMATION_OVERRIDE_ENV = "OPTEXITY_LOCAL_AUTOMATION_OVERRIDE"
+LOCAL_AUTOMATION_OVERRIDE_FILE = "test_automation.json"
+_TRUTHY = {"1", "true", "yes", "on"}
+
+
+def local_automation_override_path() -> "pathlib.Path | None":
+    """The local automation to use instead of the fetched one, or None.
+
+    Both conditions must hold. The env var alone is inert; the file alone is
+    inert. This is deliberately the single place the guard is expressed, so it
+    is testable rather than inlined into the dispatch loop.
+    """
+    if os.environ.get(LOCAL_AUTOMATION_OVERRIDE_ENV, "").strip().lower() not in _TRUTHY:
+        return None
+    path = pathlib.Path(LOCAL_AUTOMATION_OVERRIDE_FILE)
+    return path if path.exists() else None
+
 
 class ChildProcessIdRequest(BaseModel):
     new_child_process_id: str
@@ -573,14 +593,25 @@ async def task_processor():
                     )
                 continue
 
-            if pathlib.Path("test_automation.json").exists():
+            # Local automation override, for capturing and replaying a trace by
+            # hand. This sits on the real dispatch path, and firing it by
+            # accident means the worker silently runs a *different* automation
+            # than the customer asked for. A bare relative filename is not
+            # enough to protect that: this code does not pin cwd, so any
+            # stray `test_automation.json` in whatever directory the worker
+            # happened to start in would take over every task on that worker.
+            # So it also requires an explicit opt-in env var — the file alone
+            # does nothing.
+            override_path = local_automation_override_path()
+            if override_path is not None:
                 from optexity.schema.automation import Automation
 
                 logger.info(
                     f"Overriding automation for task {task.task_id} from "
-                    f"local test_automation.json"
+                    f"local {override_path} "
+                    f"({LOCAL_AUTOMATION_OVERRIDE_ENV} is set)"
                 )
-                with open("test_automation.json", "r") as f:
+                with open(override_path, "r") as f:
                     automation = json.load(f)
                     automation = Automation.model_validate(automation)
                 task.automation = automation

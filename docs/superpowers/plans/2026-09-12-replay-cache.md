@@ -945,20 +945,19 @@ And after `await agent.browser_session.stop()` / `reset()`, before `return histo
 
 - [ ] **Step 5: Capture a real trace**
 
-Put the spec's starting automation in `test_automation.json`, apply the assignment's local-override patch in `child_process.py` (after the task is fetched, before `task_running = True` at line 576):
+Put the spec's starting automation in `test_automation.json`. The local-override
+patch already lives in `child_process.py` (after the task is fetched, before
+`task_running = True`), but it is gated on **two** conditions: the file must exist
+*and* `OPTEXITY_LOCAL_AUTOMATION_OVERRIDE` must be set to a truthy value
+(`1`/`true`/`yes`/`on`). The file alone does nothing — that guard is what keeps a
+stray `test_automation.json` in a worker's cwd from silently hijacking every task
+on that worker. When it fires it logs at INFO.
 
-```python
-            from optexity.schema.automation import Automation
-            with open("test_automation.json", "r") as f:
-                automation = json.load(f)
-                automation = Automation.model_validate(automation)
-            task.automation = automation
-```
-
-Then restart the inference server and fire the endpoint:
+Then restart the inference server with the override enabled and fire the endpoint:
 
 ```bash
 cd /Users/kamal/Desktop/optexity
+OPTEXITY_LOCAL_AUTOMATION_OVERRIDE=1 \
 ENV_PATH=/Users/kamal/Desktop/optexity/.env .venv/bin/optexity inference --port 9000 --child_process_id 0
 # in another shell:
 curl -X POST http://localhost:9000/inference -H "Content-Type: application/json" \
@@ -1965,7 +1964,7 @@ Expected: all tests pass (39 across the six files).
 
 - [ ] **Step 5: Run the full pipeline on roboform**
 
-Put the spec's starting automation in `test_automation.json`, run the agentic version, then build the cached automation from the trace:
+Put the spec's starting automation in `test_automation.json` (with `OPTEXITY_LOCAL_AUTOMATION_OVERRIDE=1` set on the server), run the agentic version, then build the cached automation from the trace:
 
 ```bash
 cd /Users/kamal/Desktop/optexity
@@ -1995,7 +1994,7 @@ Expected: a non-empty `test_automation_cached.json` whose commands are real loca
 
 - [ ] **Step 6: Verify the cached automation replays**
 
-Copy `test_automation_cached.json` over `test_automation.json`, restart the server, fire the same endpoint, and confirm the form is filled with no agentic node. Record the wall clock from both runs and produce the comparison:
+Copy `test_automation_cached.json` over `test_automation.json`, restart the server (again with `OPTEXITY_LOCAL_AUTOMATION_OVERRIDE=1`), fire the same endpoint, and confirm the form is filled with no agentic node. Record the wall clock from both runs and produce the comparison:
 
 ```bash
 cd /Users/kamal/Desktop/optexity

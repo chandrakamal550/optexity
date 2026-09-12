@@ -18,12 +18,31 @@ logger = logging.getLogger(__name__)
 
 class CachedStep(BaseModel):
     action_type: str
-    command: str
+    # Empty for non-element steps (navigation), which target a URL, not a node.
+    command: str = ""
     # Full ranked candidate list, best first. The replay gate walks this when
     # the primary command fails to resolve uniquely.
     candidates: list[dict] = Field(default_factory=list)
     input_text: str | None = None
     prompt_instructions: str = ""
+    # Navigation target. Only set for action_type == "navigate".
+    url: str | None = None
+
+
+class EmitDecision(BaseModel):
+    """Why the emitter kept or dropped one pruned step.
+
+    The pruner already returns its decisions; the emitter used to drop steps
+    silently, which is how mid-run navigation disappeared from every emitted
+    automation without leaving a trace. Emitted decisions are persisted on the
+    entry so a dropped step is visible in the artifact, not only in a log line
+    nobody kept.
+    """
+
+    step: int
+    action_type: str
+    emitted: bool
+    reason: str
 
 
 class CacheEntry(BaseModel):
@@ -32,6 +51,10 @@ class CacheEntry(BaseModel):
     origin: str
     created_at: str
     steps: list[CachedStep] = Field(default_factory=list)
+    # Steps the pruner kept but the emitter could not express as an optexity
+    # action. Never empty-by-omission: if this list has entries, the emitted
+    # automation is knowingly incomplete.
+    skipped: list[EmitDecision] = Field(default_factory=list)
 
 
 class CacheStore(Protocol):
@@ -59,6 +82,14 @@ class FileCacheStore:
             return None
 
     def put(self, key: str, entry: CacheEntry) -> None:
+        # get() looks the entry up by filename and never re-checks entry.key,
+        # so a mismatch here writes an entry that is returned for a key it was
+        # not built for — a cache that lies, discovered by a customer rather
+        # than by a test. Fail loudly at write time instead.
+        if entry.key != key:
+            raise ValueError(
+                f"Refusing to store entry keyed {entry.key!r} under {key!r}"
+            )
         self.root.mkdir(parents=True, exist_ok=True)
         self._path(key).write_text(
             json.dumps(entry.model_dump(), indent=2), encoding="utf-8"

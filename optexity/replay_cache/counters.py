@@ -33,9 +33,20 @@ class ReplayCounters(BaseModel):
         return self.hits + self.chain_recoveries + self.escalations
 
     def summary(self) -> str:
+        """Describe what was actually measured: gated command steps.
+
+        The gate runs on every command-based action, not only on steps that
+        came out of a cache entry — there is no runtime cache-lookup path, so
+        this code cannot tell the two apart. Calling these "cached steps" made
+        a hand-written automation with no cache involvement report "replay
+        cache: 4 hit (4 cached steps)", which is simply false. The wording
+        below claims only what the counters can support. If a runtime lookup
+        path is added later, scope the counters to cache-sourced actions and
+        the wording can go back to talking about the cache.
+        """
         return (
-            f"replay cache: {self.hits} hit, "
-            f"{self.chain_recoveries} chain recovery, "
+            f"replay gate: {self.hits} resolved on primary, "
+            f"{self.chain_recoveries} recovered via candidate chain, "
             f"{self.escalations} escalated to LLM "
-            f"({self.total} cached steps)"
+            f"({self.total} command steps gated)"
         )

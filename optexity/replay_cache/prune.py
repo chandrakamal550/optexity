@@ -68,6 +68,11 @@ def prune(steps: list[StepRecord]) -> tuple[list[StepRecord], list[PruneDecision
             continue
 
         if kind == "scroll":
+            # Deliberately decided before the `if not s.success` branch below, so
+            # a scroll's success flag is never consulted: browser-use's multi-page
+            # scroll swallows per-page failures and returns success anyway
+            # (tools/service.py:738-770), so the flag cannot distinguish a full
+            # scroll from a partial one. Only the selector map can.
             target = _next_element_hash(steps, i)
             if target is not None and target in s.selector_map_hashes:
                 decide(s, False, "next target already existed; replay scrolls into view itself")

@@ -1,11 +1,7 @@
 {
   "url": "https://www.saucedemo.com/",
   "parameters": {
-    "input_parameters": {
-      "stock_ticker": [
-        "NVDA"
-      ]
-    },
+    "input_parameters": {},
     "generated_parameters": {}
   },
   "nodes": [
@@ -14,7 +10,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"input[data-test='username']\")",
-          "prompt_instructions": "input the element previously identified as Username",
+          "prompt_instructions": "input the <input> labelled 'Username', at xpath html/body/div/div/div[2]/div[1]/div/div/form/div[1]/input, receiving 'standard_user'",
           "input_text": "standard_user"
         }
       }
@@ -24,7 +20,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"input[data-test='password']\")",
-          "prompt_instructions": "input the element previously identified as Password",
+          "prompt_instructions": "input the <input> labelled 'Password', at xpath html/body/div/div/div[2]/div[1]/div/div/form/div[2]/input, receiving 'secret_sauce'",
           "input_text": "secret_sauce"
         }
       }
@@ -34,7 +30,7 @@
       "interaction_action": {
         "click_element": {
           "command": "locator(\"input[data-test='login-button']\")",
-          "prompt_instructions": "click the element previously identified as Login"
+          "prompt_instructions": "click the <input> labelled 'Login', at xpath html/body/div/div/div[2]/div[1]/div/div/form/input"
         }
       }
     },
@@ -43,7 +39,7 @@
       "interaction_action": {
         "click_element": {
           "command": "locator(\"button[data-test='add-to-cart-sauce-labs-backpack']\")",
-          "prompt_instructions": "click the element previously identified as Add to cart"
+          "prompt_instructions": "click the <button> labelled 'Add to cart', at xpath html/body/div[1]/div/div/div/div/div/div/div[1]/div[2]/div[2]/button"
         }
       }
     },
@@ -52,7 +48,7 @@
       "interaction_action": {
         "click_element": {
           "command": "locator(\"a[data-test='shopping-cart-link']\")",
-          "prompt_instructions": "click the element previously identified as Cart, 1 items"
+          "prompt_instructions": "click the <a> labelled 'Cart, 1 items', at xpath html/body/div[1]/div/div/header/div[1]/div[3]/a"
         }
       }
     },
@@ -61,7 +57,7 @@
       "interaction_action": {
         "click_element": {
           "command": "locator(\"button[data-test='checkout']\")",
-          "prompt_instructions": "click the element previously identified as Checkout"
+          "prompt_instructions": "click the <button> labelled 'Checkout', #2 among its same-tag siblings, at xpath html/body/div[1]/div/div/div/div/div[2]/button[2]"
         }
       }
     },
@@ -70,7 +66,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"input[data-test='firstName']\")",
-          "prompt_instructions": "input the element previously identified as First Name",
+          "prompt_instructions": "input the <input> labelled 'First Name', at xpath html/body/div[1]/div/div/div/div/form/div[1]/div[1]/input, receiving 'John'",
           "input_text": "John"
         }
       }
@@ -80,7 +76,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"input[data-test='lastName']\")",
-          "prompt_instructions": "input the element previously identified as Last Name",
+          "prompt_instructions": "input the <input> labelled 'Last Name', at xpath html/body/div[1]/div/div/div/div/form/div[1]/div[2]/input, receiving 'Doe'",
           "input_text": "Doe"
         }
       }
@@ -90,7 +86,7 @@
       "interaction_action": {
         "input_text": {
           "command": "locator(\"input[data-test='postalCode']\")",
-          "prompt_instructions": "input the element previously identified as Zip/Postal Code",
+          "prompt_instructions": "input the <input> labelled 'Zip/Postal Code', at xpath html/body/div[1]/div/div/div/div/form/div[1]/div[3]/input, receiving '12345'",
           "input_text": "12345"
         }
       }
@@ -100,7 +96,7 @@
       "interaction_action": {
         "click_element": {
           "command": "locator(\"input[data-test='continue']\")",
-          "prompt_instructions": "click the element previously identified as Continue"
+          "prompt_instructions": "click the <input> labelled 'Continue', at xpath html/body/div[1]/div/div/div/div/form/div[2]/input"
         }
       }
     },
@@ -109,7 +105,7 @@
       "interaction_action": {
         "click_element": {
           "command": "locator(\"button[data-test='finish']\")",
-          "prompt_instructions": "click the element previously identified as Finish"
+          "prompt_instructions": "click the <button> labelled 'Finish', #2 among its same-tag siblings, at xpath html/body/div[1]/div/div/div/div/div[2]/div[9]/button[2]"
         }
       }
     }

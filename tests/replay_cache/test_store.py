@@ -40,3 +40,17 @@ def test_put_creates_the_root_directory(tmp_path):
     store = FileCacheStore(tmp_path / "nested" / "deeper")
     store.put("abc123", ENTRY)
     assert store.get("abc123") is not None
+
+
+def test_put_refuses_an_entry_whose_key_does_not_match(tmp_path):
+    """get() looks entries up by filename and never re-checks entry.key, so a
+    mismatched put writes an entry that is later returned for a key it was not
+    built for. Failing that way is silent, and the symptom is a wrong result
+    for a customer, so refuse at write time."""
+    import pytest
+
+    store = FileCacheStore(tmp_path)
+    with pytest.raises(ValueError):
+        store.put("different-key", ENTRY)
+    assert store.get("different-key") is None
+    assert not (tmp_path / "different-key.json").exists()

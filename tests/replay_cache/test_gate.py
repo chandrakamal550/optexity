@@ -80,4 +80,4 @@ async def test_counters_distinguish_hit_from_recovery_from_escalation():
     assert c.hits == 1
     assert c.chain_recoveries == 1
     assert c.escalations == 1
-    assert "1 hit" in c.summary()
+    assert "1 resolved on primary" in c.summary()
