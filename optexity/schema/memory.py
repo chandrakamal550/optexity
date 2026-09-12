@@ -8,6 +8,7 @@ import psutil
 from playwright.async_api import Download
 from pydantic import BaseModel, Field, model_validator
 
+from optexity.replay_cache.counters import ReplayCounters
 from optexity.schema.token_usage import TokenUsage
 
 
@@ -153,6 +154,7 @@ class Memory(BaseModel):
     automation_state: AutomationState = Field(default_factory=AutomationState)
     browser_states: list[BrowserState] = Field(default_factory=list)
     token_usage: TokenUsage = Field(default_factory=TokenUsage)
+    replay_cache: ReplayCounters = Field(default_factory=ReplayCounters)
     download_lock: asyncio.Lock = Field(default_factory=asyncio.Lock)
     raw_downloads: dict[Path, tuple[bool, Download | None]] = Field(
         default_factory=dict

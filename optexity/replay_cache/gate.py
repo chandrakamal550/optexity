@@ -14,9 +14,12 @@ import logging
 
 from pydantic import BaseModel
 
+from optexity.replay_cache.counters import ReplayCounters
 from optexity.replay_cache.emit import command_from_locator
 
 logger = logging.getLogger(__name__)
+
+__all__ = ["GateOutcome", "ReplayCounters", "resolve_unique"]
 
 
 class GateOutcome(BaseModel):
@@ -69,32 +72,3 @@ async def resolve_unique(browser, primary_command: str, candidates: list[dict]) 
         reason=f"chain exhausted: {'; '.join(reasons)}",
         candidate_rank=-1,
     )
-
-
-class ReplayCounters:
-    """Without these, 'the cached run worked' is unfalsifiable."""
-
-    def __init__(self):
-        self.hits = 0
-        self.chain_recoveries = 0
-        self.escalations = 0
-
-    def record(self, outcome) -> None:
-        if not outcome.resolved:
-            self.escalations += 1
-        elif outcome.candidate_rank == 0:
-            self.hits += 1
-        else:
-            self.chain_recoveries += 1
-
-    @property
-    def total(self) -> int:
-        return self.hits + self.chain_recoveries + self.escalations
-
-    def summary(self) -> str:
-        return (
-            f"replay cache: {self.hits} hit, "
-            f"{self.chain_recoveries} chain recovery, "
-            f"{self.escalations} escalated to LLM "
-            f"({self.total} cached steps)"
-        )

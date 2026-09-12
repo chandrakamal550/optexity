@@ -91,6 +91,7 @@ async def command_based_action_with_retry(
             outcome = await resolve_unique(
                 browser, action.command, getattr(action, "locator_candidates", None) or []
             )
+            memory.replay_cache.record(outcome)
             if not outcome.resolved:
                 logger.warning(
                     f"Replay gate declined {action.__class__.__name__}: {outcome.reason}"

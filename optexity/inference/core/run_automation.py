@@ -282,6 +282,9 @@ async def run_automation(
             except Exception as e:
                 logger.error(f"Error/timeout stopping browser after automation: {e}")
 
+    if memory is not None and memory.replay_cache.total > 0:
+        logger.info(memory.replay_cache.summary())
+
     logger.info(f"Task {task.task_id} completed with status {task.status}")
     file_handler.flush()
     file_handler.close()
