@@ -89,6 +89,10 @@ def build_entry(
                 action_type=s.action.type,
                 command=command_from_locator(candidates[0]["locator"]),
                 candidates=candidates,
+                # "text" is correct for both actions this reads from: browser-use's
+                # InputTextAction and SelectDropdownOptionAction (tools/views.py)
+                # both name their payload field `text` — verified directly against
+                # the browser-use source, not assumed from input's shape.
                 input_text=s.action.params.get("text"),
                 prompt_instructions=(
                     f"{s.action.type} the element previously identified as "
@@ -117,6 +121,14 @@ def to_automation(entry: CacheEntry, url: str, input_parameters: dict) -> dict:
         }
         if s.action_type == "input":
             action["input_text"] = s.input_text or ""
+        elif s.action_type == "select_dropdown":
+            # SelectOptionAction.select_values is Optional[list[str]] and
+            # defaults to None. A None reaches smart_select's
+            # `for p in patterns:` with no guard, raising TypeError at replay
+            # for any dropdown with more than two real options. Emit the
+            # captured value explicitly so replay never falls through to that
+            # (LLM-driven, non-deterministic) prediction path.
+            action["select_values"] = [s.input_text] if s.input_text else []
         nodes.append(
             {
                 "type": "action_node",
