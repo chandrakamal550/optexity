@@ -615,6 +615,24 @@ async def task_processor():
                     automation = json.load(f)
                     automation = Automation.model_validate(automation)
                 task.automation = automation
+                # Swapping the automation must also swap the parameter
+                # contract that gets validated against it. Task's own
+                # validator requires task.input_parameters to carry exactly
+                # the keys the automation declares (schema/task.py:200-210),
+                # and that check runs again in the worker after this task is
+                # serialised across the process boundary. Overriding the
+                # automation alone leaves the request's parameters — declared
+                # by whichever endpoint was called — validated against a
+                # different automation entirely, and the worker dies on
+                # "Please provide exactly the same {} as the automation".
+                task.input_parameters = {
+                    name: list(values)
+                    for name, values in automation.parameters.input_parameters.items()
+                }
+                task.secure_parameters = {
+                    name: list(values)
+                    for name, values in automation.parameters.secure_parameters.items()
+                }
 
             task_running = True
             last_task_start_time = datetime.now(timezone.utc)
