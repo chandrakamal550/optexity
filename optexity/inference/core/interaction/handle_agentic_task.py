@@ -74,31 +74,40 @@ async def handle_agentic_task(
         os.environ[REPLAY_CACHE_TRACE_ENV] = str(trace_path)
         logger.debug(f"Replay-cache trace for this step: {trace_path}")
 
-        agent = Agent(
-            task=agentic_task_action.task,
-            llm=llm,
-            browser_session=browser_session,
-            use_vision=agentic_task_action.use_vision,
-            tools=tools,
-            calculate_cost=True,
-            save_conversation_path=step_directory,
-        )
-        logger.debug(f"Starting browser session for agentic task {browser.cdp_url} ")
-        await agent.browser_session.start()
-        logger.debug(f"Finally running agentic task on browser_use {browser.cdp_url} ")
-        history = await agent.run(max_steps=agentic_task_action.max_steps)
-        logger.debug(f"Agentic task completed on browser_use {browser.cdp_url} ")
+        try:
+            agent = Agent(
+                task=agentic_task_action.task,
+                llm=llm,
+                browser_session=browser_session,
+                use_vision=agentic_task_action.use_vision,
+                tools=tools,
+                calculate_cost=True,
+                save_conversation_path=step_directory,
+            )
+            logger.debug(f"Starting browser session for agentic task {browser.cdp_url} ")
+            await agent.browser_session.start()
+            logger.debug(f"Finally running agentic task on browser_use {browser.cdp_url} ")
+            history = await agent.run(max_steps=agentic_task_action.max_steps)
+            logger.debug(f"Agentic task completed on browser_use {browser.cdp_url} ")
 
-        agent.stop()
-        if agent.browser_session:
-            await agent.browser_session.stop()
-            await agent.browser_session.reset()
+            agent.stop()
+            if agent.browser_session:
+                await agent.browser_session.stop()
+                await agent.browser_session.reset()
+        finally:
+            os.environ.pop(REPLAY_CACHE_TRACE_ENV, None)
 
-        os.environ.pop(REPLAY_CACHE_TRACE_ENV, None)
-        if trace_path.exists():
-            logger.info(
-                f"Replay-cache trace written: {trace_path} "
-                f"({sum(1 for _ in trace_path.open())} step records)"
+        try:
+            if trace_path.exists():
+                with trace_path.open() as fh:
+                    record_count = sum(1 for _ in fh)
+                logger.info(
+                    f"Replay-cache trace written: {trace_path} "
+                    f"({record_count} step records)"
+                )
+        except Exception as e:
+            logger.debug(
+                f"Replay-cache trace log skipped: {type(e).__name__}: {e}"
             )
 
         return history
